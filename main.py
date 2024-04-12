@@ -14,10 +14,30 @@ db = client["MusicalChairs"]
 
 # Hash function
 def hash_function(artist_name, track_name):
-    artist_initial = artist_name[0].upper()  # Get the first character and uppercase
-    track_initial = track_name[0].upper()  # Get the first character and uppercase
-    total = ord(artist_initial) + ord(track_initial)  # Sum of ASCII values
-    return total % 2  # Return remainder of division by 2 (either 0 or 1)
+    # get artist name
+    artist_name_split = artist_name.split()
+    # get artist name's initial
+    artist_initial = artist_name_split[0][0] + artist_name_split[-1][0]
+    # change initial into number
+    artist_initial_num = ord(artist_initial[0]) + ord(artist_initial[1])
+    
+    # get song's name
+    track_name_split = track_name.split()
+    # get artist name's initial
+    track_initial = track_name_split[0][0] + track_name_split[-1][0]
+    # change initial into number
+    track_initial_num = ord(track_initial[0]) + ord(track_initial[1])
+    
+    # sum initial's number
+    total = artist_initial_num + track_initial_num
+    
+    # saperate into two path
+    if total == 0:
+        print("Missing author's and song's name.")
+    elif total%2 == 0:
+        return 0
+    elif total%2 == 1:
+        return 1
 
 # Function to convert ObjectId to string
 def jsonify_mongo(data):
