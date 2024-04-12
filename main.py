@@ -13,6 +13,8 @@ client = MongoClient("mongodb://dsci551admin:2024_dsci551_groupproject@52.52.64.
 db = client["MusicalChairs"]
 
 # Hash function
+# Inputs: artist_name (str), track_name (str)
+# Returns: hash_value (int)
 def hash_function(artist_name, track_name):
     # get artist name
     artist_name_split = artist_name.split()
@@ -40,6 +42,8 @@ def hash_function(artist_name, track_name):
         return 1
 
 # Function to convert ObjectId to string
+# Inputs: data (list of dictionaries)
+# Returns: JSON response
 def jsonify_mongo(data):
     for document in data:
         if '_id' in document:
@@ -47,6 +51,8 @@ def jsonify_mongo(data):
     return jsonify(data)
 
 # API endpoint for adding audio metadata
+# Inputs: artistName (str), trackName (str), fileUrl (str)
+# Returns: JSON response with success status and message
 @app.route('/api/audio/upload', methods=['POST'])
 def add_audio_metadata():
     data = request.json
@@ -96,6 +102,8 @@ def add_audio_metadata():
     return jsonify({'success': False, 'message': 'Invalid file type'})
 
 # API endpoint for listing audio metadata
+# Inputs: page (int), limit (int), sort_by (str), order (str)
+# Returns: JSON response with success status and data
 @app.route('/api/audio/list', methods=['GET'])
 def list_audio():
     page = int(request.args.get('page', 1))  # Allow clients to specify page; default to 1
@@ -155,6 +163,9 @@ def search_audio():
 
 
 # API endpoint for editing audio metadata
+# Inputs: id (str), artistName (str), trackName (str), fileUrl (str)
+# Returns: JSON response with success status and message
+# Note: Only fields provided by the client will be updated
 @app.route('/api/audio/edit/<id>', methods=['PUT'])
 def edit_audio(id):
     data = request.json
@@ -182,6 +193,8 @@ def edit_audio(id):
         return jsonify({'success': False, 'message': str(e)})
 
 # API endpoint for deleting audio metadata
+# Inputs: id (str)
+# Returns: JSON response with success status and message
 @app.route('/api/audio/delete/<id>', methods=['DELETE'])
 def delete_audio(id):
     try:
