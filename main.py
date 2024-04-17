@@ -148,9 +148,9 @@ def search_audio():
 
     query = {}
     if artist_name:
-        query['artistName'] = {'$eq': artist_name}  # Case-insensitive matching
+        query['artistName'] = {'$regex': artist_name, '$options': 'i'}  # Case-insensitive partial matching
     if track_name:
-        query['trackName'] = {'$eq': track_name}  # Case-insensitive matching
+        query['trackName'] = {'$regex': track_name, '$options': 'i'}  # Case-insensitive partial matching
 
     skip = (page - 1) * limit
     try:
