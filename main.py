@@ -4,6 +4,7 @@ from pymongo import MongoClient, ASCENDING, DESCENDING
 from bson.objectid import ObjectId
 import os
 from datetime import datetime
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS
@@ -206,5 +207,54 @@ def delete_audio(id):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+# User registration endpoint
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    print(data)
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': 'Username and password are required'}), 400
+
+    # Check if the username already exists
+    existing_user = db.users.find_one({'username': username})
+    if existing_user:
+        return jsonify({'success': False, 'message': 'Username already exists'}), 400
+
+    # Hash the password
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    # Create a new user document
+    user = {
+        'username': username,
+        'password': hashed_password
+    }
+    db.users.insert_one(user)
+
+    return jsonify({'success': True, 'message': 'User registered successfully'}), 201
+
+# User login endpoint
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': 'Username and password are required'}), 400
+
+    # Find the user by username
+    user = db.users.find_one({'username': username})
+    if not user:
+        return jsonify({'success': False, 'message': 'Invalid username or password'}), 401
+
+    # Check the password
+    if not bcrypt.checkpw(password.encode('utf-8'), user['password']):
+        return jsonify({'success': False, 'message': 'Invalid username or password'}), 401
+
+    return jsonify({'success': True, 'message': 'Login successful'}), 200
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=os.getenv("PORT", default=5000))
+    app.run(debug=True, host='0.0.0.0', port=os.getenv("PORT", default=5001))
