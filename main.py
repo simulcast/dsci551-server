@@ -202,7 +202,6 @@ def edit_audio(id):
 # Inputs: id (str)
 # Returns: JSON response with success status and message
 @app.route('/api/audio/delete/<id>', methods=['DELETE'])
-@app.route('/api/audio/delete/<id>', methods=['DELETE'])
 def delete_audio(id):
     try:
         # First, fetch the metadata to get the collection tag
