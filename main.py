@@ -209,16 +209,16 @@ def delete_audio(id):
         if not metadata:
             return jsonify({'success': False, 'message': 'Metadata not found'})
 
+        # Delete from the specific audio collection
+        audio_collection_name = metadata['collection_tag']
+        audio_delete_result = db[audio_collection_name].delete_one({'_id': ObjectId(id)})
+        if audio_delete_result.deleted_count == 0:
+            return jsonify({'success': False, 'message': 'Failed to delete audio document from ' + audio_collection_name})
+
         # Finally, delete the metadata entry
         metadata_delete_result = db.metadata.delete_one({'_id': ObjectId(id)})
         if metadata_delete_result.deleted_count == 0:
             return jsonify({'success': False, 'message': 'Failed to delete metadata document'})
-
-        # Delete from the specific audio collection
-        # audio_collection_name = metadata['collection_tag']
-        # audio_delete_result = db[audio_collection_name].delete_one({'_id': ObjectId(id)})
-        # if audio_delete_result.deleted_count == 0:
-        #     return jsonify({'success': False, 'message': 'Failed to delete audio document from ' + audio_collection_name})
 
         return jsonify({'success': True, 'message': 'Audio metadata and file deleted successfully'})
     except Exception as e:
