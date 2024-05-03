@@ -171,8 +171,6 @@ def search_audio():
 def edit_audio(id):
     data = request.json
     update_data = {}
-
-    # Construct an update dictionary with only the fields provided by the client
     if 'artistName' in data:
         update_data['artistName'] = data['artistName']
     if 'trackName' in data:
@@ -180,13 +178,20 @@ def edit_audio(id):
     if 'fileUrl' in data:
         update_data['fileUrl'] = data['fileUrl']
 
-    # Ensure that there is actually data to update
     if not update_data:
         return jsonify({'success': False, 'message': 'No valid fields provided for update'})
 
     try:
-        result = db.metadata.update_one({'_id': ObjectId(id)}, {'$set': update_data})
-        if result.modified_count:
+        # First, update the metadata
+        metadata_result = db.metadata.find_one_and_update({'_id': ObjectId(id)}, {'$set': update_data})
+        if not metadata_result:
+            return jsonify({'success': False, 'message': 'Metadata not found'})
+
+        # Then, update the audio collection specified by the metadata
+        audio_collection_name = metadata_result['collection_tag']
+        audio_result = db[audio_collection_name].update_one({'_id': ObjectId(id)}, {'$set': update_data})
+
+        if audio_result.modified_count:
             return jsonify({'success': True, 'message': 'Audio metadata updated successfully'})
         else:
             return jsonify({'success': True, 'message': 'No changes made or document already up to date'})
@@ -197,13 +202,26 @@ def edit_audio(id):
 # Inputs: id (str)
 # Returns: JSON response with success status and message
 @app.route('/api/audio/delete/<id>', methods=['DELETE'])
+@app.route('/api/audio/delete/<id>', methods=['DELETE'])
 def delete_audio(id):
     try:
+        # First, fetch the metadata to get the collection tag
+        metadata = db.metadata.find_one({'_id': ObjectId(id)})
+        if not metadata:
+            return jsonify({'success': False, 'message': 'Metadata not found'})
+
+        # Delete from the specific audio collection
+        audio_collection_name = metadata['collection_tag']
+        audio_delete_result = db[audio_collection_name].delete_one({'_id': ObjectId(id)})
+        if audio_delete_result.deleted_count == 0:
+            return jsonify({'success': False, 'message': 'Failed to delete audio document'})
+
+        # Finally, delete the metadata entry
         metadata_delete_result = db.metadata.delete_one({'_id': ObjectId(id)})
-        if metadata_delete_result.deleted_count:
-            return jsonify({'success': True, 'message': 'Audio metadata deleted successfully'})
-        else:
+        if metadata_delete_result.deleted_count == 0:
             return jsonify({'success': False, 'message': 'Failed to delete metadata document'})
+
+        return jsonify({'success': True, 'message': 'Audio metadata and file deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
