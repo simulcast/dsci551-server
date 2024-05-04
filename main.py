@@ -125,12 +125,14 @@ def list_audio():
 
     try:
         # Fetching data with specified or default sorting
-        audio_metadata = list(db.metadata.find({}, {'_id': 1, 'artistName': 1, 'trackName': 1, 'fileUrl': 1, 'collection_tag': 1, 'created_at': 1})
+        audio_metadata = list(db.metadata.find({}, {'_id': 1, 'artistName': 1, 'trackName': 1, 'fileUrl': 1, 'collection_tag': 1, 'audio_id': 1, 'created_at': 1})
                               .sort([(sort_by, sort_order)])
                               .skip(skip).limit(limit))
         # Convert ObjectIds to strings
         for audio in audio_metadata:
             audio['_id'] = str(audio['_id'])
+            audio['audio_id'] = str(audio['audio_id'])
+        print(audio_metadata[0])
         return jsonify({'success': True, 'data': audio_metadata})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -183,7 +185,7 @@ def edit_audio(id):
 
     try:
         # First, update the metadata
-        metadata_result = db.metadata.find_one_and_update({'_id': ObjectId(id)}, {'$set': update_data})
+        metadata_result = db.metadata.find_one_and_update({'audio_id': ObjectId(id)}, {'$set': update_data})
         if not metadata_result:
             return jsonify({'success': False, 'message': 'Metadata not found'})
 
@@ -205,7 +207,7 @@ def edit_audio(id):
 def delete_audio(id):
     try:
         # First, fetch the metadata to get the collection tag
-        metadata = db.metadata.find_one({'_id': ObjectId(id)})
+        metadata = db.metadata.find_one({'audio_id': ObjectId(id)})
         if not metadata:
             return jsonify({'success': False, 'message': 'Metadata not found'})
 
@@ -216,7 +218,7 @@ def delete_audio(id):
             return jsonify({'success': False, 'message': 'Failed to delete audio document from ' + audio_collection_name})
 
         # Finally, delete the metadata entry
-        metadata_delete_result = db.metadata.delete_one({'_id': ObjectId(id)})
+        metadata_delete_result = db.metadata.delete_one({'audio_id': ObjectId(id)})
         if metadata_delete_result.deleted_count == 0:
             return jsonify({'success': False, 'message': 'Failed to delete metadata document'})
 
